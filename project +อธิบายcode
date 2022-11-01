@@ -1,0 +1,151 @@
+import cv2  #นำเข้า library cv2
+import time #นำเข้า library เวลา
+import numpy as np # นำเข้าlibrary numpy
+from collections import deque #นำเข้า library deque โดยใช้ module collections
+#cap = cv2.VideoCapture(".\image\Car_FangResize.mp4")
+cap = cv2.VideoCapture(".\image\DIE24.mp4") #ตั้งค่าตัวเเปลนำเข้าvideo
+#cap = cv2.VideoCapture(".\image\Chili.mp4")
+object_detector = cv2.createBackgroundSubtractorMOG2() #สร้างพื้นหลัง
+
+ret, frame = cap.read() #กำหนดตัวเเปลในรูปret, frame ที่อ่านvideoที่importเข้ามา
+height, width = 1000,2000 #ตัวเเปลความสูงเเละความกว้างของvideoที่จะเเสดงผล
+referenceLine =600 # ตำเเหน่งเส้นตรวจจับ
+ImageWidth = width #ตั้งตัวเเปลความกว้าง
+#print(height,width)
+
+min_threshold = 10                   
+max_threshold = 200                   
+min_area = 100                         #ตั้งค่าตัวเเปลในการตรวจจับเเต้มลูกเต๋า
+min_circularity = 0.3
+min_inertia_ratio = 0.5
+
+
+
+positionText = (50,300)  
+positionTextL=(100,600)
+pos1 = (1080,25)
+pos2 = (1080,50)                        #ตำเเหน่งของตัวอักษร
+pos3 = (1080,75)                 
+pos4 = (1080,100)
+pos5 = (1080,125)
+pos6 = (1080,150)
+nCar = 0
+BoxInline_y = 1
+BoxInline_x = 1
+
+
+cnt1 = 0
+cnt2 = 0                             #ตัวเเปลไว้เก็บข้อมูลเเต้มลูกเต๋า
+cnt3 = 0
+cnt4 = 0
+cnt5 = 0
+cnt6 = 0
+Co1 = 0
+
+
+a=0
+b=0
+counter = 0                           # ตัวเเปลไว้จัดการนับfps
+readings = deque([0, 0], maxlen=10)     # ตัวเเปลที่ไว้ติดตามตัวเลขที่โปรเเกรมตรวจจับเเต้ม
+display = deque([0, 0], maxlen=10)
+
+
+
+while(cap.isOpened()):
+    ret, frame = cap.read()#กำหนดตัวเเปลในรูปret, frame ที่อ่านvideoที่importเข้ามา
+    roi = frame[450:720,440: 800] #กำหนดระยะของหน้าต่างvideo
+    #roi = frame[300:675,400: 1000]
+    params = cv2.SimpleBlobDetector_Params()                # ประกาศพารามิเตอร์
+    params.filterByArea = True
+    params.filterByCircularity = True
+    params.filterByInertia = True
+    params.minThreshold = min_threshold
+    params.maxThreshold = max_threshold
+    params.minArea = min_area
+    params.minCircularity = min_circularity
+    params.minInertiaRatio = min_inertia_ratio
+    #roi = ret[300:675,400: 1000]
+    
+    
+    
+    
+    detector = cv2.SimpleBlobDetector_create(params)        # สร้างblobไว้ตรวจจับเเต้ม
+
+    keypoints = detector.detect(roi)                         # สร้างlist ในkeypoint
+    
+    # here we draw keypoints on the frame.
+    
+    if counter % 10 == 0:                                   # ตรวจจับเเต้มทุกๆ10frame
+        reading = len(keypoints)                            # อ่านcounts the number of keypoints (pips).
+        readings.append(reading)                            # เก็บข้อมูลของframeนั้นๆๆ
+ 
+    if readings[-1] == readings[-2] == readings[-3]:    # ถ้าข้อมูลในตัวเเปลreading เท่ากันทั้ง3ช่วงของframe 
+            display.append(readings[-1])                    # จะทำให้อ่านเเละเเสดงในตัวเเปลdisplay
+ 
+            # หากการอ่านที่ถูกต้องล่าสุดมีการเปลี่ยนแปลง และเป็นอย่างอื่นที่ไม่ใช่ศูนย์ ให้พิมพ์ออกมา
+    if display[-1] != display[-2] and display[-1] != 0:
+        msg = f"{display[-1]}\n"
+        print(msg)
+ 
+    counter += 1
+    msg = f"{display[-1]}\n" #เอาตัวเเปลmsg ออกมาจากif
+    im_with_keypoints = cv2.drawKeypoints(roi, keypoints, np.array([]), (0, 0, 255),
+                                          cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS) #เเสดงวงกลมในvideo
+    cv2.putText(frame,msg,positionText, cv2.FONT_HERSHEY_PLAIN, 4, (255, 0, 0), 2) #เเสดงเเต้มที่ตรวจจับในvideo
+    
+    if display[-1] != display[-2] and display[-1] == 1: #เก็บข้อมูลเเต้มเท่ากับ1เเต้ม
+        cnt1 += 1
+    if display[-1] != display[-2] and display[-1] == 2: #เก็บข้อมูลเเต้มเท่ากับ2เเต้ม
+        cnt2 += 1
+    if display[-1] != display[-2] and display[-1] == 3: #เก็บข้อมูลเเต้มเท่ากับ3เเต้ม
+        cnt3 += 1
+    if display[-1] != display[-2] and display[-1] == 4: #เก็บข้อมูลเเต้มเท่ากับ4เเต้ม
+        cnt4 += 1
+    if display[-1] != display[-2] and display[-1] == 5: #เก็บข้อมูลเเต้มเท่ากับ5เเต้ม
+        cnt5 += 1
+    if display[-1] != display[-2] and display[-1] == 6: #เก็บข้อมูลเเต้มเท่ากับ6เเต้ม 
+        cnt6 += 1
+        
+    cv2.putText(frame,"1 dot = "+str(cnt1),pos1, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1) #นำเเต้มที่นับได้ลงvideo
+    cv2.putText(frame,"2 dot = "+str(cnt2),pos2, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1)
+    cv2.putText(frame,"3 dot = "+str(cnt3),pos3, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1)
+    cv2.putText(frame,"4 dot = "+str(cnt4),pos4, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1)
+    cv2.putText(frame,"5 dot = "+str(cnt5),pos5, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1)
+    cv2.putText(frame,"6 dot = "+str(cnt6),pos6, cv2.FONT_HERSHEY_PLAIN, 2,(0, 255, 255), 1)
+
+    if frame is None:
+        break
+
+    BoxInline_y = BoxInline_x
+    BoxInline_x = 0   
+    
+    mask = object_detector.apply(frame) #ตั้งตัวเเปลตรวจจับโดยใช่module apply
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) #สร้างเส้นลอบตัวลูกเต๋าเพื่อนับลูกเต๋าทั้งหมด
+    for cnt in contours:
+        # Calculate area and remove small elements
+        area = cv2.contourArea(cnt)
+        if area > 5000:         #ถ้าarea สิ่งของในvideo มากกว่า5000 ให้สร้างกรอบมาลอบสิ่งของนั้นๆ
+            cv2.drawContours(frame, [cnt], -1, (0, 255, 0), 2)
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+            
+            if y < referenceLine and (y+h) > referenceLine: #ถ้าเกิดมีสิ่งของที่โดนลอมกรอบเเล้วผ่านreferenceline จะให้ตัวเเปลboxInline_x = 1
+                BoxInline_x = 1    
+    
+    if BoxInline_y==0 and BoxInline_x==1: #ถ้าBoxInline_y==0 and BoxInline_x ามเงื่อนไข จะเก็บค่า+1ทุกครั้งที่เกิดขึ้น โดยใช่nCar เป็นตัวเก็บตัวเเปล
+        nCar = nCar + 1
+    
+    
+    textShow = str(nCar)+'='+str(BoxInline_x)+','+str(BoxInline_y)         #ตัวเเปลขอมูลที่จะให้ขึ้นโชในvideo จำนวนcountทั้งหมดของลูกเต๋า เเละ ค่าBoxInline_y เเละBoxInline_x
+    cv2.line(frame,(0,referenceLine),(ImageWidth,referenceLine),(255, 0, 0), 3) #สร้างเส้นที่ไว้ตรวจจับลูกเต๋า ในvideo
+    cv2.putText(frame,textShow , positionTextL, cv2.FONT_HERSHEY_PLAIN, 4, (255, 0, 0), 2) #ใส่ขอมูลในตัวเเปลtextshow ลงvideo
+    cv2.imshow("Dice Reader", im_with_keypoints)  #เปิดveideo(video ที่ไว้นับเเต้ม) 
+    #cv2.imshow("Mask", mask)
+    cv2.imshow("Frame", frame) #เปิดvideo ที่รวมข้อมูลทั้งหมด
+    #cv2.imshow("roi",roi)
+    if cv2.waitKey(1) & 0xff == 27:                          # press [Esc] to exit.
+        break
+ 
+
+ 
+cv2.destroyAllWindows()
